@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        .editSaveBtn {
+            display: none;
+        }
+        .list-group .form-control {
+            width: 25%;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <ul id="userDetails" class="list-group mt-4 mb-4"></ul>
+    <div class="containe card">
+        <form id="myForm" action="" class="card-body">
+            <div class="form-group">
+                <label for="username">First Name: </label>
+                <input class="form-control w-25" name="username" id="username" type="text" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+                <label for="password">Password: </label>
+                <input class="form-control w-25" name="password" id="password" type="text" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button><button type="button" class="editSaveBtn">Save Edit</button>
+        </form>
+    </div>
+
+</div>
+
+
+</body>
+<script src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function(){
+        //$('#userDetails').html('sam');
+        $('#myForm').on('submit',function(e){
+            e.preventDefault();
+            var username = $('input[name="username"]').val();
+            var password = $('input[name="password"]').val();
+            var form = $('#myForm').serialize();
+            console.log(username, password);
+            $.post('/users', form)
+            .done(function(data){
+                console.log(form);
+                buildListItems();
+            });
+            //username = password = '';
+            //$('input[name="username"]').val() = '';
+        });
+
+        buildListItems();
+
+        $('#userDetails').on('click', '.remove', function(event){
+            console.log('clicked', $(this).parent().data('id'));
+            var id = $(this).parent().data('user').id;
+            $.ajax({
+                url: '/users/'+ id,
+                type: 'DELETE',
+                success: function(response){
+                    console.log(response);
+                    buildListItems();
+                }
+            })
+        })
+
+        $('#userDetails').on('click', '.save', function(event){
+            console.log('clicked', $(this).parent().data('id'));
+            var data = $(this).parent().find('input').serialize();
+            var id = $(this).parent().find('input[name="id"]').val();
+            $.ajax({
+                url: '/users/'+ id,
+                type: 'PUT',
+                data: data,
+                success: function(response){
+                    console.log('PUT',response);
+                    buildListItems();
+                }
+            })
+            console.log(user);
+        })
+//        $('.editSaveBtn').on('click', function(){
+//            var id = $('input[name="id"]').val();
+//
+//            $('.editSaveBtn').hide();
+//            $('input[name="id"]').val('');
+//        })
+    });
+
+    function webData(){
+        $.ajax({
+            method: 'GET',
+            url: 'https://randomuser.me/api/?results=50',
+            dataType: 'json',
+            success: success
+        })
+    }
+    function success(data, status, xhr){
+        console.log('test');
+        console.log(data, status, xhr);
+    }
+    function buildListItems(){
+        $('#userDetails').html('');
+        $.getJSON('/users', function(data){
+            console.log(data);
+            $.each(data.users, function(i, value){
+                var el = '';
+                el += '<li class="list-group-item"><input class="form-control" name="username" id="username" type="text" placeholder="Enter name" value="'+value.username+'">';
+                el += '<input class="form-control mx-3" name="password" id="password" type="text" placeholder="Password" value="'+value.password+'">';
+                el += '<input class="form-control" name="id" id="id" type="text" placeholder="ID Value" value="'+value.id+'">';
+                el += '<button class="remove btn btn-danger mx-3">x</button>';
+                el += '<button class="save btn btn-default">Save</button>';
+                el += '<a href="/users/'+value.id+'" target="_blank" class="btn btn-primary mx-3">View</a></li>';
+//                var hLink = '<a href="/users/'+value.id+'" target="_blank">'+value.id+'</a>';
+//                var delBtn = '<button class="remove">x</button>';
+//                var editbtn = '<button class="edit">Edit</button>';
+                var listItem = $(el);
+                listItem.data('user', value);
+                $('#userDetails').append(listItem);
+            })
+        })
+    }
+    function output(data){
+        var myData = data.results[0];
+        $('#output').html('<h2>'+myData.name.first+'</h2>');
+        console.log(data);
+    }
+
+</script>
+
+</html>
